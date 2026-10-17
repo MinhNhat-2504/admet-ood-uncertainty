@@ -1,0 +1,58 @@
+{
+  "status": "preregistered_before_any_model_fit",
+  "created_utc": "2026-10-17T00:13:28.889173+00:00",
+  "settings": {
+    "nominal_coverage": 0.9,
+    "equivalence_margin_pp": 5.0,
+    "test_fraction": 0.3,
+    "model_seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "split_seed": 20261017,
+    "bootstrap_seed": 20261018,
+    "bootstrap_resamples": 10000,
+    "simulated_splits": [
+      "random",
+      "scaffold",
+      "butina",
+      "frontier",
+      "size"
+    ],
+    "uncertainty_methods": [
+      "ensemble",
+      "quantile",
+      "split_conformal",
+      "mondrian_conformal",
+      "distance"
+    ],
+    "eligibility": {
+      "min_train_rows": 500,
+      "min_test_rows": 250
+    },
+    "target_absolute_error": 0.5
+  },
+  "digests": {
+    "protocol/PROTOCOL.md": "4ade72705cc5b427774865481ae739b00ed3e8304bd0d578b8532f3f2c39d09d",
+    "protocol/ANALYSIS_PLAN.md": "0babaf755682e67871d9a00396b0b3d03e0db7da480755427050c14715d7bf71",
+    "protocol/lock.py": "1bb3f3c0e9ddcb659dd4065d583a9b75f4a031540411961d5485e711506c8234",
+    "data/raw/expansionrx/expansion_data_train.csv": "c5214ad8c8a4d7d4d09082fcce24fe16c97a980a1e0873b91b8c8e474b79f6e4",
+    "data/raw/expansionrx/expansion_data_test.csv": "e21c0ef19795317216287e924e00ca3ef9388b7032a7fa4c7f27e2580372c85e",
+    "src/admetood/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/admetood/audit_leakage.py": "a744b59beac8c153d917cda617d2f37f4c334144adba82b36029977e9f8a16ef",
+    "src/admetood/fetch_data.py": "70b8d69f55eefbd0fe09ec87e109a58d558dc6d1bc17e85d49d2ccb769cef467",
+    "src/admetood/standardize.py": "524dde1bc0f3afa2c82922611a0ac499514ec2096caee9e6ff9e47654b8a41db"
+  },
+  "runtime": {
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "numpy": "2.4.6",
+    "pandas": "3.0.6",
+    "rdkit": "2026.09.1",
+    "scikit-learn": "1.9.1"
+  },
+  "note": "Created before any model was fitted. Source digests cover modules that existed at lock time; modules added later are recorded by verify()."
+}
