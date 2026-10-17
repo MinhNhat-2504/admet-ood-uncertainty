@@ -64,8 +64,11 @@ together.
 comparisons below 0.80 cut from 29 of 40 to 5 of 40. Named in the protocol before any run.
 
 **6. No simulated split reveals the failure.** Across 40 split × endpoint comparisons,
-**0 transfers** within the prespecified ±5 pp margin. Random assignment predicted real
-calibration as well as any structure-based constructor.
+**0 transfers** within the prespecified ±5 pp margin. The five constructors are also not
+distinguishable from one another (Friedman p = 0.52), random assignment included: mean
+absolute gaps run 8.4–13.6 pp and no pairwise difference survives a paired test across the
+eight endpoints. The structure-based machinery bought no demonstrable advantage over a
+random partition, though eight endpoints cannot exclude a modest one.
 
 **7. Why.** On these molecules structural distance from training is one fixed quantity
 while label shift ranges from 0.003 to 1.176 training standard deviations across
@@ -88,6 +91,7 @@ python -m admetood.characterize_splits
 python -m admetood.validate_conformal
 python -m admetood.run_simulated      # simulated splits only
 python -m admetood.run_real           # opens the real test set
+python -m admetood.compare_splits
 python -m pytest
 ```
 
