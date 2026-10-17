@@ -71,8 +71,9 @@ eight endpoints. The structure-based machinery bought no demonstrable advantage 
 random partition, though eight endpoints cannot exclude a modest one.
 
 **7. Why.** On these molecules structural distance from training is one fixed quantity
-while label shift ranges from 0.003 to 1.176 training standard deviations across
-endpoints. A partition defined on structure cannot express that.
+while label shift differs by endpoint in both magnitude and sign: 0.003 training standard
+deviations for MLM CLint, +1.176 for Caco-2 efflux ratio and −0.765 for Caco-2 Papp A>B,
+which move in opposite directions. A partition defined on structure cannot express that.
 
 Results come from one organization's campaigns in one therapeutic area: they establish
 that these failures *can* occur, not how often.
@@ -92,6 +93,7 @@ python -m admetood.validate_conformal
 python -m admetood.run_simulated      # simulated splits only
 python -m admetood.run_real           # opens the real test set
 python -m admetood.compare_splits
+python -m admetood.make_figures   # writes paper/figures/
 python -m pytest
 ```
 
