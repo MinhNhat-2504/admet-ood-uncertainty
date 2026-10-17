@@ -1,80 +1,96 @@
-# ADMET prediction under distribution shift
+# Uncertainty under real prospective shift in ADMET prediction
 
-Research code for evaluating whether **structure-based out-of-distribution (OOD) splits**
-predict model behaviour under **real prospective shift**, and how uncertainty
-quantification behaves in each case.
+Research code testing whether uncertainty estimates that look calibrated on benchmark
+splits stay calibrated against a **real** prospective shift, and whether simulated splits
+reveal it when they do not.
 
 ## Research question
 
-Public ADMET benchmarks test generalization with structure-based splits: scaffold,
-cluster, Lo-Hi, DataSAIL, structural frontier. These splits are defined on molecular
-structure alone, so for a set of molecules measured on several endpoints they assign
-**the same** difficulty to every endpoint.
+Uncertainty estimates decide which predictions a project acts on, and they are validated
+on splits defined by chemical structure: scaffold, cluster, size, frontier. Whether a
+method validated that way survives the shift a model meets in use had not been tested,
+because public ADMET datasets with genuine temporal provenance did not exist.
 
-A real prospective split does not behave that way. On the ExpansionRx early-to-late
-campaign split, structural distance from training is uniform across endpoints, yet
-label shift ranges from negligible to very large (Section "Initial findings"). If real
-difficulty is endpoint-specific while structure-based difficulty is not, structure-based
-splits may rank methods and calibrate uncertainty in ways that do not transfer.
+The OpenADMET–ExpansionRx release provides one. This repository uses it to ask: **does
+calibration transfer from a simulated split to a real campaign boundary?**
 
-This repository tests that claim.
+The analysis plan was registered with a checksum lock before any model was fitted
+([`protocol/`](protocol/)), and the real test set was opened once, after the
+simulated-split results were frozen.
 
 ## Data
 
 | Dataset | Molecules | Endpoints | Split | Licence |
 | --- | ---: | ---: | --- | --- |
-| [OpenADMET-ExpansionRx](https://doi.org/10.5281/zenodo.21504733) | 7,608 | 9 (+1 raw) | real early-to-late campaign time split | CC-BY-4.0 |
+| [OpenADMET-ExpansionRx](https://doi.org/10.5281/zenodo.21504733) | 7,608 | 9 (+1 raw) | real early-to-late campaign boundary | CC-BY-4.0 |
 
-The released archive contains labels for the previously blinded test split, so the real
-prospective split can be scored directly. Raw files are not committed; download them with
-their published checksums:
+Raw files are not redistributed. The fetcher verifies the published MD5 digests and
+refuses a mismatch:
 
 ```powershell
 python -m admetood.fetch_data
 ```
 
-## Initial findings
+## Findings
 
-Measured, not assumed. Both are reproduced by the commands below.
+All measured; reproduced by the commands below.
 
-**1. The official time split has no molecular-identity leakage.** Across six identity
-levels (canonical SMILES, InChIKey, salt/charge-stripped parent, stereo-insensitive,
-tautomer-insensitive), **0 of 2,282** test molecules reappear in training. Only Murcko
-scaffolds overlap (625 test rows, 27.4%), which is expected in lead optimization.
-Mean nearest-neighbour Tanimoto is 0.613 — a near-neighbour shift, not a far-OOD one.
+**1. The reference standard is clean.** Across five levels of molecular identity
+(canonical SMILES, InChIKey, salt/charge-stripped parent, stereo-insensitive,
+tautomer-insensitive), **0 of 2,282** test molecules recur in training. Mean
+nearest-neighbour Tanimoto is 0.613 — a near-neighbour shift, not far-OOD.
 
-**2. Label shift is strongly endpoint-dependent on the same molecules.**
+**2. The estimator is correct before shift.** Over 20 independent random splits,
+split conformal attains nominal 90% coverage on all eight eligible endpoints
+(0.899–0.915).
 
-| Endpoint | Shift (training SD) | KS |
-| --- | ---: | ---: |
-| Caco-2 Efflux Ratio | +1.18 | 0.366 |
-| Caco-2 Papp A>B | −0.77 | 0.281 |
-| MPPB | +0.31 | 0.167 |
-| HLM CLint | +0.20 | 0.155 |
-| KSOL | +0.18 | 0.177 |
-| MGMB | +0.09 | 0.201 |
-| MBPB | +0.06 | 0.098 |
-| MLM CLint | +0.00 | 0.149 |
-| LogD | +0.01 | 0.042 |
+**3. Calibration breaks under real shift, differently per endpoint.** Intervals
+calibrated to 90% deliver:
 
-Same molecules, same structural distance, difficulty differing by two orders of
-magnitude. Structure alone cannot express this.
+| Endpoint | Coverage |
+| --- | ---: |
+| Caco-2 Efflux Ratio | 0.587 |
+| Caco-2 Papp A>B | 0.713 |
+| LogD | 0.760 |
+| KSOL | 0.779 |
+| MLM CLint | 0.915 |
+| HLM CLint | 0.947 |
+
+**4. A five-member ensemble's ±1.645σ interval covers 0.177.** Ensemble spread measures
+agreement among models trained on the same data; under shift they agree and are wrong
+together.
+
+**5. Distance-conditioned calibration recovers most of it.** Mean coverage 0.891, with
+comparisons below 0.80 cut from 29 of 40 to 5 of 40. Named in the protocol before any run.
+
+**6. No simulated split reveals the failure.** Across 40 split × endpoint comparisons,
+**0 transfers** within the prespecified ±5 pp margin. Random assignment predicted real
+calibration as well as any structure-based constructor.
+
+**7. Why.** On these molecules structural distance from training is one fixed quantity
+while label shift ranges from 0.003 to 1.176 training standard deviations across
+endpoints. A partition defined on structure cannot express that.
+
+Results come from one organization's campaigns in one therapeutic area: they establish
+that these failures *can* occur, not how often.
 
 ## Reproduce
 
 ```powershell
 python -m venv .venv
-.venv\Scripts\python.exe -m pip install -e .
-$env:PYTHONPATH = "src"
+.venv\Scripts\python.exe -m pip install -e ".[dev]"
+$env:PYTHONPATH = ".;src"
+
 python -m admetood.fetch_data
-python -m admetood.audit_leakage --train data/raw/expansionrx/expansion_data_train.csv --test data/raw/expansionrx/expansion_data_test.csv --output results/leakage_audit_expansionrx_official.json
+python protocol\lock.py verify
+python -m admetood.audit_leakage --train data\raw\expansionrx\expansion_data_train.csv --test data\raw\expansionrx\expansion_data_test.csv --output results\leakage_audit.json
+python -m admetood.characterize_splits
+python -m admetood.validate_conformal
+python -m admetood.run_simulated      # simulated splits only
+python -m admetood.run_real           # opens the real test set
 python -m pytest
 ```
 
-`data/`, `results/` and `paper/` are excluded from Git; artifacts are identified by the
-SHA-256 values recorded in each report.
-
-## Status
-
-Protocol and analysis plan are being written before any model is fitted. No predictive
-result is claimed yet.
+Scripts refuse to overwrite an existing report, and every scoring script verifies the
+lock before writing. `data/`, `results/` and `paper/` are excluded from Git; artifacts are
+identified by the SHA-256 values recorded in each report.
