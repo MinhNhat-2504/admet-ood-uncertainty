@@ -62,6 +62,11 @@ together.
 
 **5. Distance-conditioned calibration recovers most of it.** Mean coverage 0.891, with
 comparisons below 0.80 cut from 29 of 40 to 5 of 40. Named in the protocol before any run.
+It does not, however, improve the *ordering* of predictions by reliability: on
+selective prediction it is the weakest of the three ranking signals (−0.005 MAE against
+ensemble spread, better on 5 of 8 endpoints), while quantile width is the strongest
+(+0.030 [+0.009, +0.051], better on 7 of 8). Interval validity and error ranking are
+different capabilities and no method here wins both.
 
 **6. No simulated split reveals the failure.** Across 40 split × endpoint comparisons,
 **0 transfers** within the prespecified ±5 pp margin. The five constructors are also not
@@ -93,6 +98,7 @@ python -m admetood.validate_conformal
 python -m admetood.run_simulated      # simulated splits only
 python -m admetood.run_real           # opens the real test set
 python -m admetood.compare_splits
+python -m admetood.risk_curves
 python -m admetood.make_figures   # writes paper/figures/
 python -m pytest
 ```

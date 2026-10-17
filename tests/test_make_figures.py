@@ -99,3 +99,14 @@ def test_figures_match_the_saved_results_when_they_exist():
     expected = [r["methods"][mf.PRIMARY_METHOD]["coverage_real"]
                 for r in transfer["comparisons"] if r["endpoint"] == endpoint]
     assert mf.real_coverage(transfer["comparisons"], endpoint).tolist() == expected
+
+
+def test_risk_coverage_figure_is_written(tmp_path):
+    curves = {"target_error": 0.5, "endpoints": {
+        "LogD": {"coverage_grid": [0.2, 0.6, 1.0],
+                 "methods": {mf.PRIMARY_METHOD: {"mae_at_coverage": [0.49, 0.50, 0.52]}}},
+        "KSOL": {"coverage_grid": [0.2, 0.6, 1.0],
+                 "methods": {mf.PRIMARY_METHOD: {"mae_at_coverage": [0.34, 0.45, 0.55]}}}}}
+    path = tmp_path / "f5.png"
+    mf.figure_risk_coverage(curves, path)
+    assert path.is_file() and path.stat().st_size > 1000

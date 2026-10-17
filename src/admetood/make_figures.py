@@ -170,6 +170,35 @@ def figure_split_comparison(comparison: dict, path: Path) -> None:
     plt.close(fig)
 
 
+def figure_risk_coverage(curves: dict, path: Path) -> None:
+    """Selective-prediction curves the saturated scalar could not distinguish."""
+    endpoints = list(curves["endpoints"])
+    grid = np.array(curves["endpoints"][endpoints[0]]["coverage_grid"], dtype=float)
+    target = curves["target_error"]
+
+    fig, ax = plt.subplots(figsize=(7.2, 4.4))
+    colours = plt.get_cmap("viridis")(np.linspace(0.08, 0.92, len(endpoints)))
+    for endpoint, colour in zip(endpoints, colours):
+        mae = curves["endpoints"][endpoint]["methods"][PRIMARY_METHOD]["mae_at_coverage"]
+        ax.plot(grid, mae, marker="o", markersize=3.4, linewidth=1.5, color=colour,
+                label=label(endpoint))
+    ax.axhline(target, color="#c0392b", linestyle="--", linewidth=1.4, zorder=1)
+    # Right of the axes the target line runs through the flattest curve, so label it left.
+    ax.annotate(f"prespecified target {target}", xy=(grid.min(), target),
+                xytext=(0, -12), textcoords="offset points", ha="left", fontsize=8.5,
+                color="#c0392b")
+    ax.set_xlabel("Fraction of compounds kept, most confident first")
+    ax.set_ylabel("Mean absolute error of the kept compounds")
+    ax.set_title("Selective prediction on the real split (split conformal)", fontsize=11)
+    ax.legend(fontsize=7.6, frameon=False, ncol=2, loc="upper left")
+    ax.grid(alpha=0.25, zorder=0)
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    fig.tight_layout()
+    fig.savefig(path, dpi=300)
+    plt.close(fig)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results", type=Path, default=Path("results"))
@@ -185,6 +214,7 @@ def main() -> None:
     transfer = load("transfer_analysis.json")
     characterization = load("split_characterization.json")
     comparison = load("split_comparison.json")
+    curves = load("risk_coverage_curves.json")
 
     args.output.mkdir(parents=True, exist_ok=True)
     figures = [
@@ -194,6 +224,7 @@ def main() -> None:
          lambda p: figure_shift_dissociation(transfer, characterization, p)),
         ("figure4_split_comparison.png",
          lambda p: figure_split_comparison(comparison, p)),
+        ("figure5_risk_coverage.png", lambda p: figure_risk_coverage(curves, p)),
     ]
     for name, build in figures:
         build(args.output / name)
