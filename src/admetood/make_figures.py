@@ -199,6 +199,54 @@ def figure_risk_coverage(curves: dict, path: Path) -> None:
     plt.close(fig)
 
 
+def figure_toc(transfer: dict, path: Path) -> None:
+    """Table-of-contents graphic: simulated coverage against real, with the margin band.
+
+    Sized for the ACS minimum of 3.25 x 1.75 inches, so it carries one claim only — that
+    the points do not lie in the band — and nothing that stops being legible when small.
+    """
+    margin = transfer["equivalence_margin_pp"] / 100.0
+    splits = sorted({r["split"] for r in transfer["comparisons"]})
+    colours = dict(zip(splits, plt.get_cmap("viridis")(np.linspace(0.05, 0.85, len(splits)))))
+
+    fig, ax = plt.subplots(figsize=(3.25, 1.75))
+    grid = np.array([0.5, 1.0])
+    ax.fill_between(grid, grid - margin, grid + margin, color="#9aa4b1", alpha=0.35,
+                    linewidth=0, zorder=1)
+    ax.plot(grid, grid, color="#5b6472", linewidth=0.8, zorder=2)
+    for split in splits:
+        xs = [r["methods"][PRIMARY_METHOD]["coverage_simulated"]
+              for r in transfer["comparisons"] if r["split"] == split]
+        ys = [r["methods"][PRIMARY_METHOD]["coverage_real"]
+              for r in transfer["comparisons"] if r["split"] == split]
+        ax.scatter(xs, ys, s=13, color=colours[split], label=split, zorder=3, linewidths=0)
+
+    ax.set_xlim(0.55, 1.0)
+    ax.set_ylim(0.55, 1.0)
+    ax.set_xticks([0.6, 0.8, 1.0])
+    ax.set_yticks([0.6, 0.8, 1.0])
+    ax.tick_params(labelsize=6, length=2, pad=1)
+    ax.set_xlabel("coverage on a simulated split", fontsize=6.5, labelpad=1)
+    ax.set_ylabel("coverage on the\nreal prospective split", fontsize=6.5, labelpad=1)
+    # The band is the equivalence margin, but a verdict of "transfers" needs the whole
+    # bootstrap interval inside it, which this scatter cannot show. Ten point estimates
+    # fall in the band and none transfers, so the title claims only what the eye can check.
+    correlation = np.corrcoef(
+        [r["methods"][PRIMARY_METHOD]["coverage_simulated"] for r in transfer["comparisons"]],
+        [r["methods"][PRIMARY_METHOD]["coverage_real"] for r in transfer["comparisons"]])[0, 1]
+    ax.set_title("Simulated splits do not predict real calibration", fontsize=7.5, pad=3)
+    ax.annotate(f"r = {correlation:.2f}, 40 comparisons\nband = equivalence margin",
+                xy=(0.985, 0.03), xycoords="axes fraction", ha="right", va="bottom",
+                fontsize=5.2, color="#4a525e")
+    ax.legend(fontsize=5, frameon=False, loc="upper left", handletextpad=0.1,
+              borderpad=0.1, labelspacing=0.18, markerscale=0.9)
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    fig.tight_layout(pad=0.3)
+    fig.savefig(path, dpi=300)
+    plt.close(fig)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results", type=Path, default=Path("results"))
@@ -225,6 +273,7 @@ def main() -> None:
         ("figure4_split_comparison.png",
          lambda p: figure_split_comparison(comparison, p)),
         ("figure5_risk_coverage.png", lambda p: figure_risk_coverage(curves, p)),
+        ("toc_graphic.png", lambda p: figure_toc(transfer, p)),
     ]
     for name, build in figures:
         build(args.output / name)
