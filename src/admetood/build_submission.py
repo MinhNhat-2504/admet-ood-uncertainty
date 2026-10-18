@@ -239,9 +239,45 @@ unseen by simulated splits}
 """
 
 
+COVER_PREAMBLE = r"""\documentclass[11pt]{letter}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{parskip}
+\address{Faculty of Information Technology\\Van Lang School of Technology\\
+Van Lang University\\69/68 Dang Thuy Tram Street\\Binh Loi Trung Ward\\
+Ho Chi Minh City, Vietnam}
+\signature{Linh Nguyen Thi My\\Corresponding author\\
+Faculty of Information Technology, Van Lang School of Technology\\
+Van Lang University, Ho Chi Minh City, Vietnam\\
+linh.ntm@vlu.edu.vn}
+\date{%s}
+\begin{document}
+\begin{letter}{The Editors\\\emph{Journal of Chemical Information and Modeling}\\
+American Chemical Society}
+\opening{Dear Editors,}
+
+"""
+
+
+def cover_letter(markdown: str, date: str) -> str:
+    """Typeset the cover letter, which the submission form wants as a PDF.
+
+    The editorial note at the top of the Markdown is for the authors, not the editor, so
+    the body is taken from the first sentence of the letter proper to the sign-off.
+    """
+    body = markdown[markdown.index("We submit for your consideration"):
+                    markdown.index("Yours sincerely,")].strip()
+    paragraphs = "\n\n".join(inline(" ".join(p.split()))
+                             for p in body.split("\n\n") if p.strip())
+    return (COVER_PREAMBLE % date + paragraphs
+            + "\n\n" + r"\closing{Yours sincerely,}" + "\n"
+            + r"\end{letter}" + "\n" + r"\end{document}" + "\n")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", type=Path, default=Path("paper/MANUSCRIPT.md"))
+    parser.add_argument("--cover", type=Path, default=Path("paper/COVER_LETTER.md"))
     parser.add_argument("--output", type=Path, default=Path("paper/submission"))
     args = parser.parse_args()
     if not args.source.is_file():
@@ -279,6 +315,15 @@ def main() -> None:
     (args.output / "front_matter.md").write_text(front.strip() + "\n", encoding="utf-8")
     print(f"wrote {target}")
     print(f"wrote {args.output / 'front_matter.md'}")
+
+    if args.cover.is_file():
+        import datetime
+        letter = args.output / "cover_letter.tex"
+        letter.write_text(
+            cover_letter(args.cover.read_text(encoding="utf-8"),
+                         datetime.date.today().strftime("%d %B %Y")), encoding="utf-8")
+        print(f"wrote {letter}")
+
     print(f"abstract: {len(abstract.split())} words")
 
 
