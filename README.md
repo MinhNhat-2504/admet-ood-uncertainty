@@ -56,12 +56,19 @@ calibrated to 90% deliver:
 | MLM CLint | 0.915 |
 | HLM CLint | 0.947 |
 
-**4. A five-member ensemble's ±1.645σ interval covers 0.177.** Ensemble spread measures
-agreement among models trained on the same data; under shift they agree and are wrong
-together.
+**4. A five-member ensemble's ±1.645σ interval covers 0.177 — for boosted trees.**
+Ensemble spread measures agreement among models trained on the same data; under shift they
+agree and are wrong together. Refitting with a neural network, the same construction covers
+0.813, so this failure belongs to low-variance learners rather than to ensembles as such.
+The conformal undercoverage does reproduce across both families (mean 0.779 and 0.810,
+six of eight endpoints under nominal), and so does the distance-conditioned fix (0.891 and
+0.907).
 
 **5. Distance-conditioned calibration recovers most of it.** Mean coverage 0.891, with
-comparisons below 0.80 cut from 29 of 40 to 5 of 40. Named in the protocol before any run.
+comparisons below 0.80 cut from 29 of 40 to 5 of 40. Named in the protocol before any run,
+and it produces **no unbounded intervals**: the figure is a claim about every test
+molecule. The Mondrian variant looks comparable at 0.879 but declines to bound 21.7% of
+molecules, and covers 0.848 on those it does bound.
 It does not, however, improve the *ordering* of predictions by reliability: on
 selective prediction it is the weakest of the three ranking signals (−0.005 MAE against
 ensemble spread, better on 5 of 8 endpoints), while quantile width is the strongest
@@ -99,6 +106,8 @@ python -m admetood.run_simulated      # simulated splits only
 python -m admetood.run_real           # opens the real test set
 python -m admetood.compare_splits
 python -m admetood.risk_curves
+python -m admetood.interval_audit
+python -m admetood.robustness     # exploratory second model family
 python -m admetood.make_figures   # writes paper/figures/
 python -m pytest
 ```
