@@ -202,14 +202,16 @@ def figure_risk_coverage(curves: dict, path: Path) -> None:
 def figure_toc(transfer: dict, path: Path) -> None:
     """Table-of-contents graphic: simulated coverage against real, with the margin band.
 
-    Sized for the ACS minimum of 3.25 x 1.75 inches, so it carries one claim only — that
-    the points do not lie in the band — and nothing that stops being legible when small.
+    Sized to the area ACS specifies, 3.33 x 1.87 inches (8.46 x 4.76 cm), and submitted at
+    that actual size rather than larger, as the guidelines ask. It therefore carries one
+    claim only — that the points do not lie in the band — and nothing that stops being
+    legible when small.
     """
     margin = transfer["equivalence_margin_pp"] / 100.0
     splits = sorted({r["split"] for r in transfer["comparisons"]})
     colours = dict(zip(splits, plt.get_cmap("viridis")(np.linspace(0.05, 0.85, len(splits)))))
 
-    fig, ax = plt.subplots(figsize=(3.25, 1.75))
+    fig, ax = plt.subplots(figsize=(3.33, 1.87))
     grid = np.array([0.5, 1.0])
     ax.fill_between(grid, grid - margin, grid + margin, color="#9aa4b1", alpha=0.35,
                     linewidth=0, zorder=1)
@@ -222,7 +224,9 @@ def figure_toc(transfer: dict, path: Path) -> None:
         ax.scatter(xs, ys, s=13, color=colours[split], label=split, zorder=3, linewidths=0)
 
     ax.set_xlim(0.55, 1.0)
-    ax.set_ylim(0.55, 1.0)
+    # The lowest point sits at about 0.57, so the extra headroom below keeps the caption
+    # clear of the data rather than printing it over a marker.
+    ax.set_ylim(0.46, 1.0)
     ax.set_xticks([0.6, 0.8, 1.0])
     ax.set_yticks([0.6, 0.8, 1.0])
     ax.tick_params(labelsize=6, length=2, pad=1)
