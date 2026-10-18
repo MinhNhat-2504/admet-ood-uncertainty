@@ -257,9 +257,20 @@ def main() -> None:
     body = before_refs.split("## 1.", 1)[1]
     front = text.split("## Front matter", 1)[1]
 
+    # ACS puts funding under Acknowledgement and the competing-interest declaration under
+    # Notes. Both belong in the manuscript, not only in the submission form.
+    closing = [r"\begin{acknowledgement}",
+               "This research received no specific grant from any funding agency in the "
+               "public, commercial or not-for-profit sectors.",
+               r"\end{acknowledgement}", "",
+               r"\section*{Notes}",
+               "The authors declare no competing financial interest. Neither author is "
+               "affiliated with Expansion Therapeutics or the OpenADMET consortium, and "
+               "neither participated in the ExpansionRx blind challenge.", ""]
+
     document = [PREAMBLE,
                 r"\begin{abstract}", inline(abstract), r"\end{abstract}", "",
-                convert_body("## 1." + body),
+                convert_body("## 1." + body), ""] + closing + [
                 references(), "", r"\end{document}"]
 
     args.output.mkdir(parents=True, exist_ok=True)

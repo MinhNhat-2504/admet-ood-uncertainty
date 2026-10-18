@@ -90,6 +90,12 @@ which move in opposite directions. A partition defined on structure cannot expre
 Results come from one organization's campaigns in one therapeutic area: they establish
 that these failures *can* occur, not how often.
 
+## Licence
+
+Analysis code: MIT (see [`LICENSE`](LICENSE)), free to use without restriction. The
+OpenADMET–ExpansionRx dataset is not redistributed here; it is published separately under
+CC-BY-4.0 at doi:10.5281/zenodo.21504733.
+
 ## Reproduce
 
 ```powershell
