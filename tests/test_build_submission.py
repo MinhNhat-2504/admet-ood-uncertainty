@@ -80,8 +80,8 @@ def test_an_ordinary_paragraph_is_not_mistaken_for_a_figure():
 
 def test_every_reference_is_numbered_and_in_acs_order():
     refs = bs.references()
-    assert refs.count(r"\bibitem") == 6
-    for number in range(1, 7):
+    assert refs.count(r"\bibitem") == 13
+    for number in range(1, 14):
         assert f"bibitem{{ref{number}}}" in refs
     # ACS puts the journal in italic and the year in bold.
     assert r"\emph{J. Chem. Inf. Model.} \textbf{2023}" in refs
@@ -112,3 +112,12 @@ def test_no_literal_non_ascii_survives_conversion():
     sample = "Coverage 0.587–0.947 with ±1.645σ and 40 × 8 comparisons ≥ nominal."
     out = bs.inline(sample)
     assert all(ord(c) < 128 for c in out), [c for c in out if ord(c) > 127]
+
+
+def test_citations_above_nine_are_not_left_as_literal_text():
+    """A single-digit pattern silently drops [10] and up once the list passes nine."""
+    out = bs.inline("see [7] and [10] and [13]")
+    assert r"\cite{ref7}" in out
+    assert r"\cite{ref10}" in out
+    assert r"\cite{ref13}" in out
+    assert "[10]" not in out and "[13]" not in out

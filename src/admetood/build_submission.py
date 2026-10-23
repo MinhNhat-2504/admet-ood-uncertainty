@@ -61,7 +61,9 @@ def inline(text: str) -> str:
         return f"\0{len(spans) - 1}\0"
 
     text = re.sub(r"`([^`]+)`", park, text)
-    text = re.sub(r"\[(\d)\]", r"\\cite{ref\1}", text)
+    # \d+, not \d: with ten or more references, a single-digit pattern silently leaves
+    # [10] and up as literal text while the earlier ones become citations.
+    text = re.sub(r"\[(\d+)\]", r"\\cite{ref\1}", text)
     text = escape(text)
     text = re.sub(r"\*\*(.+?)\*\*", r"\\textbf{\1}", text, flags=re.S)
     text = re.sub(r"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)", r"\\emph{\1}", text, flags=re.S)
@@ -203,6 +205,32 @@ def references() -> str:
                   r"Pharmaceutical Data: Implications for Uncertainty Quantification in "
                   r"QSAR Models. \emph{Artif. Intell. Life Sci.} \textbf{2025}, "
                   r"\emph{8}, 100132."),
+        (r"ref7", r"Papadopoulos, H.; Proedrou, K.; Vovk, V.; Gammerman, A. Inductive "
+                  r"Confidence Machines for Regression. In \emph{Machine Learning: ECML "
+                  r"2002}; Lecture Notes in Computer Science; Springer: Berlin, "
+                  r"\textbf{2002}; pp 345--356."),
+        (r"ref8", r"Lei, J.; G'Sell, M.; Rinaldo, A.; Tibshirani, R. J.; Wasserman, L. "
+                  r"Distribution-Free Predictive Inference for Regression. \emph{J. Am. "
+                  r"Stat. Assoc.} \textbf{2018}, \emph{113}, 1094--1111."),
+        (r"ref9", r"Johansson, U.; Ahlberg, E.; Bostr\"om, H.; Carlsson, L.; Linusson, "
+                  r"H.; S\"onstr\"od, C. Handling Small Calibration Sets in Mondrian "
+                  r"Inductive Conformal Regressors. In \emph{Statistical Learning and "
+                  r"Data Sciences}; Lecture Notes in Computer Science; Springer: Cham, "
+                  r"\textbf{2015}; pp 271--280."),
+        (r"ref10", r"Papadopoulos, H.; Vovk, V.; Gammerman, A. Regression Conformal "
+                   r"Prediction with Nearest Neighbours. \emph{J. Artif. Intell. Res.} "
+                   r"\textbf{2011}, \emph{40}, 815--840."),
+        (r"ref11", r"Lakshminarayanan, B.; Pritzel, A.; Blundell, C. Simple and Scalable "
+                   r"Predictive Uncertainty Estimation Using Deep Ensembles. In "
+                   r"\emph{Advances in Neural Information Processing Systems 30}, "
+                   r"\textbf{2017}; arXiv:1612.01474."),
+        (r"ref12", r"Romano, Y.; Patterson, E.; Cand\`es, E. J. Conformalized Quantile "
+                   r"Regression. In \emph{Advances in Neural Information Processing "
+                   r"Systems 32}, \textbf{2019}; arXiv:1905.03222."),
+        (r"ref13", r"Norinder, U.; Carlsson, L.; Boyer, S.; Eklund, M. Introducing "
+                   r"Conformal Prediction in Predictive Modeling. A Transparent and "
+                   r"Flexible Alternative to Applicability Domain Determination. "
+                   r"\emph{J. Chem. Inf. Model.} \textbf{2014}, \emph{54}, 1596--1603."),
     ]
     body = "\n".join(rf"\bibitem{{{key}}} {text}" for key, text in entries)
     return ("\\begin{thebibliography}{9}\n" + body + "\n\\end{thebibliography}")
