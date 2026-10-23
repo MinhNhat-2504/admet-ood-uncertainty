@@ -280,8 +280,8 @@ Van Lang University, Ho Chi Minh City, Vietnam\\
 linh.ntm@vlu.edu.vn}
 \date{%s}
 \begin{document}
-\begin{letter}{The Editors\\\emph{Journal of Chemical Information and Modeling}\\
-American Chemical Society}
+\begin{letter}{The Editors\\\emph{Molecular Informatics}\\
+Wiley-VCH}
 \opening{Dear Editors,}
 
 """
@@ -302,10 +302,49 @@ def cover_letter(markdown: str, date: str) -> str:
             + r"\end{letter}" + "\n" + r"\end{document}" + "\n")
 
 
+# A publisher-neutral alternative to the ACS class. Wiley and most other publishers take
+# free-format initial submissions, and a source file whose first line names another
+# journal's class advertises where the paper was sent before.
+NEUTRAL_PREAMBLE = r"""\documentclass[11pt]{article}
+\usepackage{graphicx}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage[htt]{hyphenat}
+\usepackage{authblk}
+\sloppy
+\emergencystretch=2em
+\doublespacing
+
+\title{Calibrated uncertainty fails under prospective shift in ADMET,
+unseen by simulated splits}
+\author[1]{Nhat Trinh Ngoc Minh}
+\author[1,*]{Linh Nguyen Thi My}
+\affil[1]{Faculty of Information Technology, Van Lang School of Technology,
+Van Lang University, 69/68 Dang Thuy Tram Street, Binh Loi Trung Ward,
+Ho Chi Minh City, Vietnam}
+\affil[*]{Corresponding author: linh.ntm@vlu.edu.vn}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{center}
+\fbox{\begin{minipage}{0.95\linewidth}
+\centering\textbf{Graphical abstract}\\[4pt]
+\includegraphics[width=0.75\linewidth]{figures/toc_graphic.png}
+\end{minipage}}
+\end{center}
+
+"""
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", type=Path, default=Path("paper/MANUSCRIPT.md"))
     parser.add_argument("--cover", type=Path, default=Path("paper/COVER_LETTER.md"))
+    parser.add_argument("--style", choices=("acs", "neutral"), default="neutral",
+                        help="acs uses the achemso class; neutral names no publisher")
     parser.add_argument("--output", type=Path, default=Path("paper/submission"))
     args = parser.parse_args()
     if not args.source.is_file():
@@ -323,17 +362,23 @@ def main() -> None:
 
     # ACS puts funding under Acknowledgement and the competing-interest declaration under
     # Notes. Both belong in the manuscript, not only in the submission form.
-    closing = [r"\begin{acknowledgement}",
-               "This research received no specific grant from any funding agency in the "
-               "public, commercial or not-for-profit sectors.",
-               r"\end{acknowledgement}", "",
-               r"\section*{Notes}",
-               "The authors declare no competing financial interest. Neither author is "
-               "affiliated with Expansion Therapeutics or the OpenADMET consortium, and "
-               "neither participated in the ExpansionRx blind challenge.", ""]
+    acknowledgement = ("This research received no specific grant from any funding agency "
+                       "in the public, commercial or not-for-profit sectors.")
+    notes = ("The authors declare no competing financial interest. Neither author is "
+             "affiliated with Expansion Therapeutics or the OpenADMET consortium, and "
+             "neither participated in the ExpansionRx blind challenge.")
+    if args.style == "acs":
+        preamble = PREAMBLE
+        opening = [r"\begin{abstract}", inline(abstract), r"\end{abstract}", ""]
+        closing = [r"\begin{acknowledgement}", acknowledgement, r"\end{acknowledgement}",
+                   "", r"\section*{Notes}", notes, ""]
+    else:
+        preamble = NEUTRAL_PREAMBLE
+        opening = [r"\section*{Abstract}", inline(abstract), ""]
+        closing = [r"\section*{Acknowledgement}", acknowledgement, "",
+                   r"\section*{Conflict of interest}", notes, ""]
 
-    document = [PREAMBLE,
-                r"\begin{abstract}", inline(abstract), r"\end{abstract}", "",
+    document = [preamble] + opening + [
                 convert_body("## 1." + body), ""] + closing + [
                 references(), "", r"\end{document}"]
 
