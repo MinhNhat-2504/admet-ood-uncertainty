@@ -96,9 +96,11 @@ def test_preamble_declares_both_authors_and_one_corresponding_address():
 
 
 def test_section_numbers_survive_because_the_text_cross_references_them():
+    # Starred forms: the numbers are already in the heading text, and a class that
+    # numbers sections itself would otherwise print each number twice.
     out = bs.convert_body("## 6. Simulated splits\n\n### 6.2 Why\n\nSee Section 6.2.")
-    assert r"\section{6. Simulated splits}" in out
-    assert r"\subsection{6.2 Why}" in out
+    assert r"\section*{6. Simulated splits}" in out
+    assert r"\subsection*{6.2 Why}" in out
 
 
 @pytest.mark.parametrize("raw,expected", [("±", r"$\pm$"), ("×", r"$\times$"),
@@ -121,3 +123,11 @@ def test_citations_above_nine_are_not_left_as_literal_text():
     assert r"\cite{ref10}" in out
     assert r"\cite{ref13}" in out
     assert "[10]" not in out and "[13]" not in out
+
+
+def test_structural_bold_survives_but_is_not_required_elsewhere():
+    """Table and Figure markers drive the float conversion; prose bold is incidental."""
+    rows = ["| a | b |", "| --- | ---: |", "| 1 | 2 |"]
+    body = bs.convert_body("**Table 3. A caption.**\n\n" + "\n".join(rows))
+    assert r"\caption{A caption.}" in body
+    assert r"\begin{table}" in body

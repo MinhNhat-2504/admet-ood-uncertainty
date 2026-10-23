@@ -105,8 +105,14 @@ def convert_figure(number: str, filename: str, caption: str) -> str:
         r"\end{figure}"])
 
 
-def convert_body(text: str) -> str:
-    """Walk the document line by line; stop on anything unrecognised."""
+def convert_body(text: str, numbered_by_latex: bool = False) -> str:
+    """Walk the document line by line; stop on anything unrecognised.
+
+    The headings carry their own numbers because the text cross-references them
+    ("Section 6.2"). A class that numbers sections itself would then print the number
+    twice, so under such a class the starred forms are used.
+    """
+    star = "" if numbered_by_latex else "*"
     lines = text.split("\n")
     out: list[str] = []
     index, table_count = 0, 0
@@ -121,10 +127,10 @@ def convert_body(text: str) -> str:
             # The numbers stay. The text makes twenty-one cross-references of the form
             # "Section 6.2", and ACS does not number sections for us, so stripping them
             # leaves every one of those pointing at nothing.
-            out.append(r"\subsection{" + inline(line[4:].strip()) + "}")
+            out.append("\subsection" + star + "{" + inline(line[4:].strip()) + "}")
             index += 1
         elif line.startswith("## "):
-            out.append(r"\section{" + inline(line[3:].strip()) + "}")
+            out.append("\section" + star + "{" + inline(line[3:].strip()) + "}")
             index += 1
         elif line.startswith("# "):
             index += 1                      # Title is set in the preamble.
@@ -379,7 +385,7 @@ def main() -> None:
                    r"\section*{Conflict of interest}", notes, ""]
 
     document = [preamble] + opening + [
-                convert_body("## 1." + body), ""] + closing + [
+                convert_body("## 1." + body, numbered_by_latex=False), ""] + closing + [
                 references(), "", r"\end{document}"]
 
     args.output.mkdir(parents=True, exist_ok=True)
